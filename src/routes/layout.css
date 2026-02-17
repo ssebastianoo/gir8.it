@@ -1,0 +1,30 @@
+@import 'tailwindcss';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+	--color-primary: #000000;
+	--color-background: #ffffff;
+}
+
+.dark {
+	--color-primary: #ffffff;
+	--color-background: #000000;
+}
+
+@layer base {
+	body {
+		@apply bg-background text-primary;
+		font-family: 'Sometype Mono Variable', monospace;
+	}
+
+	a,
+	button {
+		@apply cursor-pointer;
+	}
+
+	a:hover,
+	button:hover {
+		@apply bg-primary text-background;
+	}
+}
