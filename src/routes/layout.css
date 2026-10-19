@@ -47,6 +47,12 @@
 }
 
 @layer base {
+	/* the layout is built in vw, but stops growing past 1440px and stays centered */
+	:root {
+		--u: min(1vw, 14.4px);
+		--gutter: max(0px, calc((100vw - 1440px) / 2));
+	}
+
 	html {
 		background-color: var(--color-background);
 		color: var(--color-primary);

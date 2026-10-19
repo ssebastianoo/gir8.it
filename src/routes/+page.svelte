@@ -110,7 +110,7 @@
 
 <!-- the name stays pinned top right for the whole site once it gets there -->
 <h1
-	class="fixed top-[4vw] left-[8vw] z-10 text-[10.4vw] leading-[1.2] font-bold tracking-tight max-md:top-6 max-md:left-6 max-md:text-[13vw]"
+	class="fixed top-[calc(4*var(--u))] left-[calc(var(--gutter)+8*var(--u))] z-10 text-[calc(10.4*var(--u))] leading-[1.2] font-bold tracking-tight max-md:top-6 max-md:left-6 max-md:text-[13vw]"
 >
 	<span
 		bind:this={first}
@@ -126,7 +126,7 @@
 <!-- where the name ends up, only used for measuring -->
 <div
 	aria-hidden="true"
-	class="invisible fixed top-[2vw] right-[3vw] text-[2.4vw] leading-[1.2] font-bold tracking-tight max-md:top-5 max-md:right-6 max-md:text-[6vw]"
+	class="invisible fixed top-[calc(2*var(--u))] right-[calc(var(--gutter)+3*var(--u))] text-[calc(2.4*var(--u))] leading-[1.2] font-bold tracking-tight max-md:top-5 max-md:right-6 max-md:text-[6vw]"
 >
 	<span bind:this={firstEnd} class="inline-block">sebastiano</span>
 	<span bind:this={lastEnd} class="inline-block">girotto</span>
@@ -137,12 +137,12 @@
 		<Portrait
 			delay={600}
 			progress={range(0, 0.2)}
-			class="absolute top-[55%] right-[8vw] -translate-y-1/2 text-[min(0.8vw,0.85vh)] leading-[1.1] max-md:right-6 max-md:text-[calc((100vw-3rem)/74)]"
+			class="absolute top-[55%] right-[calc(var(--gutter)+8*var(--u))] -translate-y-1/2 text-[min(calc(0.8*var(--u)),0.85vh)] leading-[1.1] max-md:right-6 max-md:text-[calc((100vw-3rem)/74)]"
 		/>
 
 		<p
 			class={[
-				'absolute right-[8vw] bottom-[8vw] text-[5.1vw] leading-none max-md:right-6 max-md:bottom-6 max-md:text-[6vw]',
+				'absolute right-[calc(var(--gutter)+8*var(--u))] bottom-[calc(8*var(--u))] text-[calc(5.1*var(--u))] leading-none max-md:right-6 max-md:bottom-6 max-md:text-[6vw]',
 				progress > 0 && 'opacity-0'
 			]}
 		>
@@ -160,13 +160,13 @@
 
 		<section
 			class={[
-				'absolute inset-x-[8vw] top-[11vw] flex flex-col items-start gap-[3vw] max-md:inset-x-6 max-md:top-24 max-md:gap-6',
+				'absolute top-[calc(11*var(--u))] right-[calc(var(--gutter)+8*var(--u))] left-[calc(var(--gutter)+8*var(--u))] flex flex-col items-start gap-[calc(3*var(--u))] max-md:top-24 max-md:right-6 max-md:left-6 max-md:gap-6',
 				progress === 0 && 'opacity-0'
 			]}
 		>
 			<h2
 				bind:this={title}
-				class="text-[5.1vw] leading-none max-md:text-[9vw]"
+				class="text-[calc(5.1*var(--u))] leading-none max-md:text-[9vw]"
 				style:transform={move(offsets?.title, 1 - titleMove)}
 				style:transform-origin={offsets?.title.origin}
 				style:font-weight={400 + 300 * titleMove}
@@ -177,7 +177,7 @@
 			</h2>
 			<p
 				bind:this={body}
-				class="w-[62vw] text-[2.2vw] leading-[1.45] max-md:w-auto max-md:text-[4.4vw]"
+				class="w-[calc(62*var(--u))] text-[calc(2.2*var(--u))] leading-[1.45] max-md:w-auto max-md:text-[4.4vw]"
 				style:transform={move(offsets?.body, 1 - bodyMove)}
 				style:transform-origin={offsets?.body.origin}
 			>
@@ -186,7 +186,7 @@
 				>
 			</p>
 			<p
-				class="w-[62vw] self-end text-[2.2vw] leading-[1.45] max-md:w-auto max-md:self-auto max-md:text-[4.4vw]"
+				class="w-[calc(62*var(--u))] self-end text-[calc(2.2*var(--u))] leading-[1.45] max-md:w-auto max-md:self-auto max-md:text-[4.4vw]"
 			>
 				<MorphText
 					from=""

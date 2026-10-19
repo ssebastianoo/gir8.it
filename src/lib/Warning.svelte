@@ -52,21 +52,21 @@
 		aria-label="warning"
 		out:powerOff
 		class={[
-			'flex w-[46vw] animate-alert-in flex-col items-center gap-[1vw] border-2 border-t-[0.8vw] border-primary bg-background p-[1.2vw] shadow-[0_0_3vw] shadow-primary/15 motion-reduce:animate-none max-md:w-[88vw] max-md:gap-3 max-md:border-t-8 max-md:p-3',
+			'flex w-[calc(46*var(--u))] animate-alert-in flex-col items-center gap-[calc(1*var(--u))] border-2 border-t-[calc(0.8*var(--u))] border-primary bg-background p-[calc(1.2*var(--u))] shadow-[0_0_calc(3*var(--u))] shadow-primary/15 motion-reduce:animate-none max-md:w-[88vw] max-md:gap-3 max-md:border-t-8 max-md:p-3',
 			className
 		]}
 	>
-		<p class="self-start text-[1.1vw] max-md:text-[2.6vw]">
+		<p class="self-start text-[calc(1.1*var(--u))] max-md:text-[2.6vw]">
 			<span class="opacity-60">seb@gir8.it:~ $</span>
 			<TypeText text={COMMAND} delay={COMMAND_DELAY} speed={COMMAND_SPEED} scramble={90} />
 		</p>
 		<div
 			aria-hidden="true"
-			class="text-[1.05vw] leading-[1.15] font-bold whitespace-nowrap max-md:text-[1.75vw]"
+			class="text-[calc(1.05*var(--u))] leading-[1.15] font-bold whitespace-nowrap max-md:text-[1.75vw]"
 		>
 			<TypeText text={BANNER} delay={BANNER_DELAY} speed={BANNER_SPEED} scramble={200} />
 		</div>
-		<p class="text-[1.25vw] leading-snug font-bold break-all max-md:text-[2.6vw]">
+		<p class="text-[calc(1.25*var(--u))] leading-snug font-bold break-all max-md:text-[2.6vw]">
 			<TypeText {text} delay={TEXT_DELAY} speed={10} scramble={250} cursor />
 		</p>
 	</section>
