@@ -8,6 +8,42 @@
 	--font-mono: 'Geist Mono Variable', ui-monospace, SFMono-Regular, monospace;
 	--color-background: #171414;
 	--color-primary: #f9f6ee;
+
+	--animate-blink: blink 1s steps(1) infinite;
+
+	--animate-alert-in: alert-in 0.7s ease-out both;
+
+	@keyframes blink {
+		50% {
+			opacity: 0;
+		}
+	}
+
+	/* slams open, then flickers like a crt alert */
+	@keyframes alert-in {
+		0% {
+			opacity: 0;
+			transform: scaleY(0);
+		}
+		25% {
+			opacity: 1;
+			transform: scaleY(1);
+		}
+		35% {
+			opacity: 0.2;
+		}
+		45% {
+			opacity: 1;
+		}
+		55% {
+			opacity: 0.4;
+		}
+		65%,
+		100% {
+			opacity: 1;
+			transform: scaleY(1);
+		}
+	}
 }
 
 @layer base {
