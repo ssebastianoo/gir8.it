@@ -1,12 +1,15 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import MorphText from '#lib/MorphText.svelte';
+	import Portrait from '#lib/Portrait.svelte';
 	import TypeText from '#lib/TypeText.svelte';
 	import Warning from '#lib/Warning.svelte';
 
 	const SCROLL = 'SCROLL!SCROLL!SCROLL!SCROLL'.repeat(4);
 	const ABOUT =
 		'i’m a freelance full-stack developer who’s been a computer science nerd since middle school, when i first started coding. i contribute to open source projects and work with companies to design and build custom software.';
+	const MUSIC =
+		'i’m also a music producer, since 2023 i’ve been playing guitar and working with rock and edm music, in april 2026 my band, nomorecho, released our first EP, mostly produced by me';
 
 	// viewport heights of scrolling it takes the hero to turn into the about section
 	const TRANSITION = 1.5;
@@ -123,7 +126,7 @@
 <!-- where the name ends up, only used for measuring -->
 <div
 	aria-hidden="true"
-	class="invisible fixed top-[2vw] right-[3vw] text-[1.6vw] leading-[1.2] font-bold tracking-tight max-md:top-5 max-md:right-6 max-md:text-[5vw]"
+	class="invisible fixed top-[2vw] right-[3vw] text-[2.4vw] leading-[1.2] font-bold tracking-tight max-md:top-5 max-md:right-6 max-md:text-[6vw]"
 >
 	<span bind:this={firstEnd} class="inline-block">sebastiano</span>
 	<span bind:this={lastEnd} class="inline-block">girotto</span>
@@ -131,6 +134,12 @@
 
 <main class="relative h-[300vh]">
 	<div class="sticky top-0 z-20 h-screen overflow-hidden">
+		<Portrait
+			delay={600}
+			progress={range(0, 0.2)}
+			class="absolute top-[55%] right-[8vw] -translate-y-1/2 text-[min(0.8vw,0.85vh)] leading-[1.1] max-md:right-6 max-md:text-[calc((100vw-3rem)/74)]"
+		/>
+
 		<p
 			class={[
 				'absolute right-[8vw] bottom-[8vw] text-[5.1vw] leading-none max-md:right-6 max-md:bottom-6 max-md:text-[6vw]',
@@ -175,6 +184,16 @@
 				<span bind:this={bodyAnchor}
 					><MorphText from="developer" to={ABOUT} progress={range(0.25, 1)} /></span
 				>
+			</p>
+			<p
+				class="w-[62vw] self-end text-[2.2vw] leading-[1.45] max-md:w-auto max-md:self-auto max-md:text-[4.4vw]"
+			>
+				<MorphText
+					from=""
+					to={MUSIC}
+					progress={range(0.5, 1)}
+					links={{ nomorecho: 'https://nomorecho.com' }}
+				/>
 			</p>
 		</section>
 
