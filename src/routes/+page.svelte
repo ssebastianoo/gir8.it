@@ -1,12 +1,11 @@
-<script lang="ts">
-	import SEO from '$lib/SEO.svelte';
-</script>
+<svelte:head>
+	<title>sebastiano girotto</title>
+	<meta name="description" content="sebastiano girotto, full stack developer" />
+</svelte:head>
 
-<SEO title="seb" description="frontdev developer from italy" path="/" />
-
-<h1 class="text-3xl">seb</h1>
-<div class="mt-2 flex flex-col">
-	<a href="/work">work</a>
-	<a href="/online">online</a>
-	<a href="https://soundcloud.com/sebps" target="_blank">music</a>
-</div>
+<main class="flex min-h-screen flex-col justify-between px-[8vw] pt-[4vw] pb-[8vw] max-md:p-6">
+	<h1 class="text-[10.4vw] leading-[1.2] font-bold tracking-tight max-md:text-[13vw]">
+		sebastiano<br />girotto
+	</h1>
+	<p class="self-end text-[5.1vw] leading-none max-md:text-[6vw]">full stack developer</p>
+</main>
