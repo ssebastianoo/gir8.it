@@ -47,10 +47,11 @@
 }
 
 @layer base {
-	/* the layout is built in vw, but stops growing past 1440px and stays centered */
+	/* the layout is built in vw, but it can't outgrow 1440px or the viewport height (the stage
+	   doesn't scroll, so the about text must fit in it), and it stays centered */
 	:root {
-		--u: min(1vw, 14.4px);
-		--gutter: max(0px, calc((100vw - 1440px) / 2));
+		--u: min(1vw, 1.75vh, 14.4px);
+		--gutter: max(0px, calc((100vw - 100 * var(--u)) / 2));
 	}
 
 	html {
