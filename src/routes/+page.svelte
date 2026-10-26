@@ -2,8 +2,10 @@
 	import { onMount } from 'svelte';
 	import MorphText from '#lib/MorphText.svelte';
 	import Portrait from '#lib/Portrait.svelte';
+	import Pyramid, { CHAR_WIDTH, COLS, LINE_HEIGHT, ROWS } from '#lib/Pyramid.svelte';
 	import TypeText from '#lib/TypeText.svelte';
 	import Warning from '#lib/Warning.svelte';
+	import Work from '#lib/Work.svelte';
 
 	const SCROLL = 'SCROLL!SCROLL!SCROLL!SCROLL'.repeat(4);
 	const ABOUT =
@@ -13,6 +15,12 @@
 
 	// viewport heights of scrolling it takes the hero to turn into the about section
 	const TRANSITION = 1.5;
+	// viewport heights of scrolling, from the top, before the about section starts to vanish, which
+	// leaves it a moment to be read once it has shown up
+	const WORK_START = 2;
+	// viewport heights of scrolling it takes the about section to turn into the work title, which
+	// is also how long the roadmap takes to get up to the page
+	const WORK_TRANSITION = 0.6;
 	// ms without any scrolling, once the intro has finished typing, before the scroll warning shows up
 	const WARNING_AFTER = 3000;
 
@@ -30,9 +38,17 @@
 
 	const progress = $derived(Math.min(1, Math.max(0, scrollY / (innerHeight * TRANSITION))));
 
+	const workProgress = $derived(
+		Math.min(1, Math.max(0, (scrollY - innerHeight * WORK_START) / (innerHeight * WORK_TRANSITION)))
+	);
+	// the about section is leaving, to make room for the work title
+	const leaving = $derived(workProgress > 0);
+
 	// progress remapped to [from, to], clamped
-	const range = (from: number, to: number) =>
-		Math.min(1, Math.max(0, (progress - from) / (to - from)));
+	const remap = (value: number, from: number, to: number) =>
+		Math.min(1, Math.max(0, (value - from) / (to - from)));
+	const range = (from: number, to: number) => remap(progress, from, to);
+	const workRange = (from: number, to: number) => remap(workProgress, from, to);
 	const ease = (t: number) => t * t * (3 - 2 * t);
 
 	const nameMove = $derived(ease(range(0, 0.45)));
@@ -62,6 +78,15 @@
 
 	let offsets = $state<Record<'first' | 'last' | 'title' | 'body', Offset>>();
 
+	// how far the title has to move sideways to end up centered once it reads "work"
+	let section = $state<HTMLElement>();
+	let workWidth = $state<HTMLElement>();
+	let center = $state(0);
+
+	// where the pyramid goes, in the room under the about text, if there is enough of it
+	const MIN_PYRAMID = 7;
+	let pyramid = $state<{ top: number; height: number; size: number }>();
+
 	const measure = (el: HTMLElement, anchor: HTMLElement, target: HTMLElement): Offset => {
 		const transform = el.style.transform;
 		el.style.transform = 'none';
@@ -79,6 +104,21 @@
 		};
 	};
 
+	const measurePyramid = () => {
+		// the text collapses while it goes away, which says nothing about the room under it
+		if (leaving) return;
+		const stage = section!.offsetParent as HTMLElement;
+		const gap = stage.clientHeight * 0.04;
+		const top = section!.offsetTop + section!.offsetHeight + gap;
+		const height = stage.clientHeight - top - gap;
+		const size = Math.min(
+			height / (ROWS * LINE_HEIGHT),
+			(stage.clientWidth * 0.92) / (COLS * CHAR_WIDTH),
+			20
+		);
+		pyramid = size >= MIN_PYRAMID ? { top, height, size } : undefined;
+	};
+
 	const measureAll = () => {
 		offsets = {
 			first: measure(first!, first!, firstEnd!),
@@ -86,6 +126,8 @@
 			title: measure(title!, titleAnchor!, heroTitle!),
 			body: measure(body!, bodyAnchor!, heroBody!)
 		};
+		center = (section!.clientWidth - workWidth!.offsetWidth) / 2;
+		measurePyramid();
 	};
 
 	// `amount` 0 leaves the element where it is laid out, 1 puts it on its target
@@ -97,7 +139,14 @@
 		measureAll();
 		document.fonts.ready.then(measureAll);
 
-		return () => clearTimeout(warningTimer);
+		// the text can still reflow after the fonts are in, and with it the room under it
+		const observer = new ResizeObserver(measurePyramid);
+		observer.observe(section!);
+
+		return () => {
+			clearTimeout(warningTimer);
+			observer.disconnect();
+		};
 	});
 </script>
 
@@ -132,7 +181,9 @@
 	<span bind:this={lastEnd} class="inline-block">girotto</span>
 </div>
 
-<main class="relative h-[300vh]">
+<!-- the roadmap comes up from the bottom of the screen as soon as the about section starts to vanish,
+	so the page ends once it has settled under the title -->
+<main class="relative h-[calc(400vh-24*var(--u))] max-md:h-[calc(400vh-12rem)]">
 	<div class="sticky top-0 z-20 h-screen overflow-hidden">
 		<Portrait
 			delay={600}
@@ -159,22 +210,35 @@
 		</p>
 
 		<section
+			bind:this={section}
 			class={[
 				'absolute top-[calc(11*var(--u))] right-[calc(var(--gutter)+8*var(--u))] left-[calc(var(--gutter)+8*var(--u))] flex flex-col items-start gap-[calc(3*var(--u))] max-md:top-24 max-md:right-6 max-md:left-6 max-md:gap-6',
 				progress === 0 && 'opacity-0'
 			]}
 		>
-			<h2
-				bind:this={title}
-				class="text-[calc(5.1*var(--u))] leading-none max-md:text-[9vw]"
-				style:transform={move(offsets?.title, 1 - titleMove)}
-				style:transform-origin={offsets?.title.origin}
-				style:font-weight={400 + 300 * titleMove}
-			>
-				<span bind:this={titleAnchor}
-					><MorphText from="full-stack" to="about me" progress={range(0.15, 0.6)} /></span
+			<div style:transform="translateX({center * ease(workRange(0.2, 1))}px)">
+				<h2
+					bind:this={title}
+					class="text-[calc(5.1*var(--u))] leading-none max-md:text-[9vw]"
+					style:transform={move(offsets?.title, 1 - titleMove)}
+					style:transform-origin={offsets?.title.origin}
+					style:font-weight={400 + 300 * titleMove}
 				>
-			</h2>
+					<span bind:this={titleAnchor}
+						><MorphText
+							from={leaving ? 'about me' : 'full-stack'}
+							to={leaving ? 'work' : 'about me'}
+							progress={leaving ? workRange(0.2, 1) : range(0.15, 0.6)}
+						/></span
+					>
+					<!-- how wide the final title is, only used for measuring -->
+					<span
+						bind:this={workWidth}
+						aria-hidden="true"
+						class="invisible absolute font-bold whitespace-nowrap">work</span
+					>
+				</h2>
+			</div>
 			<p
 				bind:this={body}
 				class="w-[calc(62*var(--u))] text-[calc(2.2*var(--u))] leading-[1.45] max-md:w-auto max-md:text-[4.4vw]"
@@ -182,20 +246,39 @@
 				style:transform-origin={offsets?.body.origin}
 			>
 				<span bind:this={bodyAnchor}
-					><MorphText from="developer" to={ABOUT} progress={range(0.25, 1)} /></span
+					><MorphText
+						from={leaving ? ABOUT : 'developer'}
+						to={leaving ? '' : ABOUT}
+						progress={leaving ? workRange(0.1, 0.7) : range(0.25, 1)}
+					/></span
 				>
 			</p>
 			<p
 				class="w-[calc(62*var(--u))] self-end text-[calc(2.2*var(--u))] leading-[1.45] max-md:w-auto max-md:self-auto max-md:text-[4.4vw]"
 			>
 				<MorphText
-					from=""
-					to={MUSIC}
-					progress={range(0.5, 1)}
+					from={leaving ? MUSIC : ''}
+					to={leaving ? '' : MUSIC}
+					progress={leaving ? workRange(0, 0.4) : range(0.5, 1)}
 					links={{ nomorecho: 'https://nomorecho.com' }}
 				/>
 			</p>
 		</section>
+
+		<!-- fills the room the about text leaves under it -->
+		{#if pyramid}
+			<div
+				aria-hidden="true"
+				class={[
+					'pointer-events-none absolute inset-x-0 flex items-center justify-center transition-opacity duration-500',
+					progress < 1 || leaving ? 'opacity-0' : 'opacity-100'
+				]}
+				style:top="{pyramid.top}px"
+				style:height="{pyramid.height}px"
+			>
+				<Pyramid active={progress >= 1 && !leaving} style="font-size: {pyramid.size}px" />
+			</div>
+		{/if}
 
 		<Warning
 			text={SCROLL}
@@ -204,3 +287,5 @@
 		/>
 	</div>
 </main>
+
+<Work />

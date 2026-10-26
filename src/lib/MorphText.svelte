@@ -65,8 +65,8 @@
 		return hrefs;
 	});
 
-	// one unbreakable group per word of `to`, so swapping characters never changes where lines wrap,
-	// made of runs of characters that link to the same place
+	// one unbreakable group per word of `to` (or of `from` where `to` has run out), so swapping
+	// characters never changes where lines wrap, made of runs of characters that link to the same place
 	const words = $derived.by(() => {
 		const groups: { href?: string; chars: number[] }[][] = [[]];
 		for (let i = 0; i < length; i++) {
@@ -74,7 +74,7 @@
 			const run = word.at(-1);
 			if (run && run.href === hrefs[i]) run.chars.push(i);
 			else word.push({ href: hrefs[i], chars: [i] });
-			if (target[i] === ' ' && i < target.length - 1) groups.push([]);
+			if ((target[i] ?? source[i]) === ' ' && i < length - 1) groups.push([]);
 		}
 		return groups;
 	});
