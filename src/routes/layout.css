@@ -1,30 +1,62 @@
 @import 'tailwindcss';
-
-@custom-variant dark (&:where(.dark, .dark *));
+@import '@fontsource-variable/geist';
+@import '@fontsource-variable/geist-mono';
+@plugin '@tailwindcss/typography';
 
 @theme {
-	--color-primary: #000000;
-	--color-background: #ffffff;
-}
+	--font-sans: 'Geist Variable', ui-sans-serif, system-ui, sans-serif;
+	--font-mono: 'Geist Mono Variable', ui-monospace, SFMono-Regular, monospace;
+	--color-background: #171414;
+	--color-primary: #f9f6ee;
 
-.dark {
-	--color-primary: #ffffff;
-	--color-background: #000000;
+	--animate-blink: blink 1s steps(1) infinite;
+
+	--animate-alert-in: alert-in 0.7s ease-out both;
+
+	@keyframes blink {
+		50% {
+			opacity: 0;
+		}
+	}
+
+	/* slams open, then flickers like a crt alert */
+	@keyframes alert-in {
+		0% {
+			opacity: 0;
+			transform: scaleY(0);
+		}
+		25% {
+			opacity: 1;
+			transform: scaleY(1);
+		}
+		35% {
+			opacity: 0.2;
+		}
+		45% {
+			opacity: 1;
+		}
+		55% {
+			opacity: 0.4;
+		}
+		65%,
+		100% {
+			opacity: 1;
+			transform: scaleY(1);
+		}
+	}
 }
 
 @layer base {
-	body {
-		@apply bg-background text-primary;
-		font-family: 'Sometype Mono Variable', monospace;
+	/* the layout is built in vw, but it can't outgrow 1440px or the viewport height (the stage
+	   doesn't scroll, so the about text must fit in it), and it stays centered */
+	:root {
+		--u: min(1vw, 1.75vh, 14.4px);
+		--gutter: max(0px, calc((100vw - 100 * var(--u)) / 2));
 	}
 
-	a,
-	button {
-		@apply cursor-pointer;
-	}
-
-	a:hover,
-	button:hover {
-		@apply bg-primary text-background;
+	html {
+		background-color: var(--color-background);
+		color: var(--color-primary);
+		font-family: var(--font-mono);
 	}
 }
