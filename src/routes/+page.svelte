@@ -27,10 +27,8 @@
 	const WARNING_AFTER = 3000;
 
 	let scrollY = $state(0);
-	// the contact section has the screen to itself, everything else has gone away
-	let docked = $state(false);
-	// has gone away at least once, so it comes back in instead of just sitting there at first
-	let returning = $state(false);
+	// how far the contact section has taken the screen, 1 once everything else has gone away
+	let dock = $state(0);
 	let innerHeight = $state(1);
 	let warningOpen = $state(false);
 	let scrolled = false;
@@ -61,15 +59,10 @@
 	const titleMove = $derived(ease(range(0, 0.45)));
 	const bodyMove = $derived(ease(range(0.05, 0.5)));
 
-	$effect(() => {
-		if (docked) returning = true;
-	});
-
+	// closes down to a line and goes out like an old terminal as the contact section takes over,
 	// on the name's parts and not on the name, they are moved out of its box and it would clip them
-	const nameExit = $derived([
-		docked && 'animate-crt-off motion-reduce:animate-none motion-reduce:opacity-0',
-		!docked && returning && 'animate-crt-on motion-reduce:animate-none'
-	]);
+	const nameOpacity = $derived(1 - dock);
+	const nameClip = $derived(dock > 0 ? `inset(${dock * 50}% 0 ${dock * 50}% 0)` : undefined);
 
 	$effect(() => {
 		if (progress > 0) {
@@ -151,9 +144,24 @@
 		offset &&
 		`translate(${offset.x * amount}px, ${offset.y * amount}px) scale(${1 + (offset.scale - 1) * amount})`;
 
+	// where to scroll to for each section to be fully shown, the page is scrubbed by the scroll so
+	// the sections have no position of their own for a plain anchor to land on
+	const targets: Record<string, () => number> = {
+		about: () => innerHeight * TRANSITION,
+		work: () => innerHeight * (WORK_START + WORK_TRANSITION),
+		connect: () => document.documentElement.scrollHeight
+	};
+
+	const goToHash = (behavior: ScrollBehavior) => {
+		const target = targets[location.hash.slice(1)];
+		if (target) scrollTo({ top: target(), behavior });
+	};
+
 	onMount(() => {
 		measureAll();
 		document.fonts.ready.then(measureAll);
+		// after the browser has restored the scroll position it would otherwise leave behind
+		requestAnimationFrame(() => goToHash('instant'));
 
 		// the text can still reflow after the fonts are in, and with it the room under it
 		const observer = new ResizeObserver(measurePyramid);
@@ -168,24 +176,32 @@
 
 <Seo />
 
-<svelte:window bind:scrollY bind:innerHeight onresize={measureAll} />
+<svelte:window
+	bind:scrollY
+	bind:innerHeight
+	onresize={measureAll}
+	onhashchange={() => goToHash('smooth')}
+/>
 
 <!-- the name stays pinned top right for the whole site once it gets there -->
 <h1
 	class={[
 		'fixed top-[calc(4*var(--u))] left-[calc(var(--gutter)+8*var(--u))] z-10 text-[calc(10.4*var(--u))] leading-[1.2] font-bold tracking-tight max-md:top-6 max-md:left-6 max-md:text-[13vw]',
-		docked && 'pointer-events-none'
+		dock > 0 && 'pointer-events-none'
 	]}
 >
 	<span
 		bind:this={first}
-		class={['inline-block origin-top-left', nameExit]}
-		style:transform={move(offsets?.first, nameMove)}><TypeText text="sebastiano" /></span
+		class="inline-block origin-top-left"
+		style:transform={move(offsets?.first, nameMove)}
+		style:opacity={nameOpacity}
+		style:clip-path={nameClip}><TypeText text="sebastiano" /></span
 	>{' '}<br /><span
 		bind:this={last}
-		class={['inline-block origin-top-left', nameExit]}
+		class="inline-block origin-top-left"
 		style:transform={move(offsets?.last, nameMove)}
-		><TypeText text="girotto" delay={11 * 55} /></span
+		style:opacity={nameOpacity}
+		style:clip-path={nameClip}><TypeText text="girotto" delay={11 * 55} /></span
 	>
 </h1>
 <!-- where the name ends up, only used for measuring -->
@@ -304,5 +320,5 @@
 	</div>
 </main>
 
-<Work faded={docked} />
-<Contact bind:docked />
+<Work />
+<Contact bind:dock />

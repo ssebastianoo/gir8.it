@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount, tick } from 'svelte';
+	import { onMount } from 'svelte';
 	import MorphText from '#lib/MorphText.svelte';
 	import Pyramid, { CHAR_WIDTH, COLS, LINE_HEIGHT, ROWS } from '#lib/Pyramid.svelte';
 
@@ -10,29 +10,26 @@
 	];
 
 	interface Props {
-		// everything else has gone away, and the text is left alone in the center
-		docked?: boolean;
+		// how far everything else has gone away, 0 to 1, driven by the scroll
+		dock?: number;
 	}
 
-	let { docked = $bindable(false) }: Props = $props();
+	let { dock = $bindable(0) }: Props = $props();
 
 	const MIN_PYRAMID = 7;
-	// px of scrolling past the point where the text has fully shown up before everything else goes
-	// away, scrolling back up over them doesn't bring it back, so the scroll bouncing can't flicker it
-	const DOCK_AFTER = 60;
+	// viewport heights of scrolling, once the section has the screen to itself, that it takes the
+	// text to show up and then move up to make room for the pyramid
+	const RUNWAY = 0.9;
 
-	let content = $state<HTMLElement>();
 	let contentHeight = $state(0);
 	let innerHeight = $state(1);
 	let innerWidth = $state(1);
-	let progress = $state(0);
-	// where the middle of the text was on screen when it docked, which is where it moves from
-	let anchor = $state(0);
-	// room taken off the end of the page when it docked, so the page ends right there
-	let trim = $state(0);
+	let section = $state<HTMLElement>();
+	// px scrolled since the section started to come up from the bottom of the screen
+	let scrolled = $state(0);
 
-	// once docked the text moves to the middle of the top half of the screen (as far down as it
-	// needs to fit), and the pyramid takes the room under it
+	// the text moves to the middle of the top half of the screen (as far down as it needs to fit),
+	// and the pyramid takes the room under it
 	const layout = $derived.by(() => {
 		const gap = innerHeight * 0.04;
 		const center = Math.max(innerHeight / 4, contentHeight / 2 + gap);
@@ -49,57 +46,45 @@
 		};
 	});
 
-	// the text is done once it has come up from the bottom of the screen
+	// in viewport heights: 0 is the section's top edge reaching the bottom of the screen, 1 is it
+	// reaching the top, where it stays pinned for the runway
+	const place = $derived(scrolled / innerHeight);
+	const remap = (value: number, from: number, to: number) =>
+		Math.min(1, Math.max(0, (value - from) / (to - from)));
+	const ease = (t: number) => t * t * (3 - 2 * t);
+
+	// the text types itself out while it comes up and the runway starts
+	const progress = $derived(remap(place, 0.4, 1 + RUNWAY * 0.4));
+	const moved = $derived(ease(remap(place, 1 + RUNWAY * 0.45, 1 + RUNWAY)));
+
+	$effect(() => {
+		dock = moved;
+	});
+
 	// reads the window directly, this runs before bind:innerHeight has caught up with the same event
 	const measure = () => {
-		if (!content) return;
-		const box = content.getBoundingClientRect();
-		const shown = (window.innerHeight - box.top) / box.height;
-		progress = Math.min(1, Math.max(0, (shown - 0.1) / 0.8));
-
-		const left = document.documentElement.scrollHeight - window.scrollY - window.innerHeight;
-		// the bottom of the page counts too, a short screen might never get past DOCK_AFTER
-		const arrived = shown >= 0.9 + DOCK_AFTER / box.height || (progress >= 1 && left <= 2);
-		if (!docked && arrived) {
-			docked = true;
-			anchor = box.top + box.height / 2;
-			trim = left;
-		} else if (docked && progress < 1) {
-			docked = false;
-			trim = 0;
-		}
-	};
-
-	const onresize = async () => {
-		await tick();
-		measure();
-		if (!docked || !content) return;
-		const box = content.getBoundingClientRect();
-		anchor = box.top + box.height / 2;
+		if (section) scrolled = window.innerHeight - section.getBoundingClientRect().top;
 	};
 
 	// progress remapped to [from, to], clamped
-	const range = (from: number, to: number) =>
-		Math.min(1, Math.max(0, (progress - from) / (to - from)));
+	const range = (from: number, to: number) => remap(progress, from, to);
 
 	onMount(measure);
 </script>
 
-<svelte:window bind:innerHeight bind:innerWidth onscroll={measure} {onresize} />
+<svelte:window bind:innerHeight bind:innerWidth onscroll={measure} onresize={measure} />
 
+<!-- the screen stays pinned while the runway is scrolled through -->
 <section
-	class="px-[calc(var(--gutter)+8*var(--u))] text-center max-md:px-6"
-	style:padding-bottom="{Math.max(0, (innerHeight - contentHeight) / 2 - trim)}px"
+	bind:this={section}
+	class="-mt-[35vh] px-[calc(var(--gutter)+8*var(--u))] text-center max-md:px-6"
+	style:height="{(1 + RUNWAY) * 100}vh"
 >
-	<!-- measured where it is laid out, the moving part is inside -->
-	<div bind:this={content} bind:clientHeight={contentHeight}>
+	<div class="sticky top-0 flex h-screen items-center justify-center">
 		<div
-			class={[
-				'flex flex-col items-center gap-[calc(3*var(--u))] transition-transform duration-1000 ease-[cubic-bezier(0.65,0,0.35,1)] motion-reduce:transition-none max-md:gap-8',
-				// everything else has to be gone first, or it shows behind the text on its way up
-				docked && 'delay-500'
-			]}
-			style:transform={docked ? `translateY(${layout.center - anchor}px)` : undefined}
+			bind:clientHeight={contentHeight}
+			class="flex flex-col items-center gap-[calc(3*var(--u))] max-md:gap-8"
+			style:transform="translateY({(layout.center - innerHeight / 2) * moved}px)"
 		>
 			<div class="flex flex-col items-center gap-[calc(1.5*var(--u))] max-md:gap-3">
 				<h2 class="text-[calc(5.1*var(--u))] leading-none font-bold max-md:text-[7vw]">
@@ -133,20 +118,18 @@
 				</ul>
 			</div>
 		</div>
+
+		<!-- fills the bottom half once the text has moved up -->
+		{#if layout.pyramid}
+			<div
+				aria-hidden="true"
+				class="pointer-events-none absolute inset-x-0 flex items-center justify-center"
+				style:top="{layout.pyramid.top}px"
+				style:height="{layout.pyramid.height}px"
+				style:opacity={ease(remap(moved, 0.3, 1))}
+			>
+				<Pyramid active={moved > 0.3} style="font-size: {layout.pyramid.size}px" />
+			</div>
+		{/if}
 	</div>
 </section>
-
-<!-- fills the bottom half once the text has moved up -->
-{#if layout.pyramid}
-	<div
-		aria-hidden="true"
-		class={[
-			'pointer-events-none fixed inset-x-0 flex items-center justify-center transition-opacity duration-700 motion-reduce:transition-none',
-			docked ? 'opacity-100 delay-1000' : 'opacity-0'
-		]}
-		style:top="{layout.pyramid.top}px"
-		style:height="{layout.pyramid.height}px"
-	>
-		<Pyramid active={docked} style="font-size: {layout.pyramid.size}px" />
-	</div>
-{/if}
