@@ -4,6 +4,7 @@
 	import MorphText from '#lib/MorphText.svelte';
 	import Portrait from '#lib/Portrait.svelte';
 	import Pyramid, { CHAR_WIDTH, COLS, LINE_HEIGHT, ROWS } from '#lib/Pyramid.svelte';
+	import Seo from '#lib/Seo.svelte';
 	import TypeText from '#lib/TypeText.svelte';
 	import Warning from '#lib/Warning.svelte';
 	import Work from '#lib/Work.svelte';
@@ -165,10 +166,7 @@
 	});
 </script>
 
-<svelte:head>
-	<title>sebastiano girotto</title>
-	<meta name="description" content="sebastiano girotto, full-stack developer" />
-</svelte:head>
+<Seo />
 
 <svelte:window bind:scrollY bind:innerHeight onresize={measureAll} />
 
@@ -183,7 +181,7 @@
 		bind:this={first}
 		class={['inline-block origin-top-left', nameExit]}
 		style:transform={move(offsets?.first, nameMove)}><TypeText text="sebastiano" /></span
-	><br /><span
+	>{' '}<br /><span
 		bind:this={last}
 		class={['inline-block origin-top-left', nameExit]}
 		style:transform={move(offsets?.last, nameMove)}

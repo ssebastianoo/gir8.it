@@ -1,0 +1,10 @@
+# Sebastiano Girotto
+
+> Freelance full-stack developer. Builds custom web software with TypeScript, SvelteKit and PostgreSQL, contributes to open source, and produces music.
+
+- [Portfolio](https://gir8.it): about, work experience and contact
+- [GitHub](https://github.com/ssebastianoo): open source projects
+- [LinkedIn](https://linkedin.com/in/sebastianogirotto)
+- [nomorecho](https://nomorecho.com): rock/edm band, first EP released April 2026
+
+Contact: work@gir8.it

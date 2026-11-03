@@ -71,6 +71,7 @@
 		!faded && returning && 'animate-crt-on motion-reduce:animate-none'
 	]}
 >
+	<h2 class="sr-only">work experience</h2>
 	<ol class="relative flex flex-col gap-[calc(9*var(--u))] max-md:gap-14">
 		<!-- the roadmap -->
 		<span
