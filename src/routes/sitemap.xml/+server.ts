@@ -1,35 +1,17 @@
-import type { RequestHandler } from './$types';
-import { PUBLIC_URL } from '$env/static/public';
+import { absolute } from '#lib/site.ts';
 
 export const prerender = true;
 
-export const GET: RequestHandler = async () => {
+// single page site, add a <url> per page if more routes show up
+const PAGES = ['/'];
 
-    const url = PUBLIC_URL.endsWith('/') ? PUBLIC_URL.slice(0, -1) : PUBLIC_URL;
+export const GET = () => {
+	const urls = PAGES.map(
+		(path) => `\t<url>\n\t\t<loc>${absolute(path)}</loc>\n\t\t<priority>1.0</priority>\n\t</url>`
+	).join('\n');
 
-    const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url>
-    <loc>${url}</loc>
-    <changefreq>weekly</changefreq>
-    <priority>1.0</priority>
-  </url>
-
-  <url>
-    <loc>${url}/work</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>${url}/online</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-</urlset>`;
-
-    return new Response(sitemap, {
-        headers: {
-            'Content-Type': 'application/xml'
-        }
-    });
+	return new Response(
+		`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>\n`,
+		{ headers: { 'Content-Type': 'application/xml' } }
+	);
 };

@@ -1,3 +1,5 @@
-# allow crawling everything by default
+# allow crawling everything, including ai and search crawlers
 User-agent: *
-Disallow:
+Allow: /
+
+Sitemap: https://gir8.it/sitemap.xml
