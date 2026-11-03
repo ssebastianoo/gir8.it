@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import Contact from '#lib/Contact.svelte';
 	import MorphText from '#lib/MorphText.svelte';
 	import Portrait from '#lib/Portrait.svelte';
 	import Pyramid, { CHAR_WIDTH, COLS, LINE_HEIGHT, ROWS } from '#lib/Pyramid.svelte';
@@ -25,6 +26,10 @@
 	const WARNING_AFTER = 3000;
 
 	let scrollY = $state(0);
+	// the contact section has the screen to itself, everything else has gone away
+	let docked = $state(false);
+	// has gone away at least once, so it comes back in instead of just sitting there at first
+	let returning = $state(false);
 	let innerHeight = $state(1);
 	let warningOpen = $state(false);
 	let scrolled = false;
@@ -54,6 +59,16 @@
 	const nameMove = $derived(ease(range(0, 0.45)));
 	const titleMove = $derived(ease(range(0, 0.45)));
 	const bodyMove = $derived(ease(range(0.05, 0.5)));
+
+	$effect(() => {
+		if (docked) returning = true;
+	});
+
+	// on the name's parts and not on the name, they are moved out of its box and it would clip them
+	const nameExit = $derived([
+		docked && 'animate-crt-off motion-reduce:animate-none motion-reduce:opacity-0',
+		!docked && returning && 'animate-crt-on motion-reduce:animate-none'
+	]);
 
 	$effect(() => {
 		if (progress > 0) {
@@ -159,15 +174,18 @@
 
 <!-- the name stays pinned top right for the whole site once it gets there -->
 <h1
-	class="fixed top-[calc(4*var(--u))] left-[calc(var(--gutter)+8*var(--u))] z-10 text-[calc(10.4*var(--u))] leading-[1.2] font-bold tracking-tight max-md:top-6 max-md:left-6 max-md:text-[13vw]"
+	class={[
+		'fixed top-[calc(4*var(--u))] left-[calc(var(--gutter)+8*var(--u))] z-10 text-[calc(10.4*var(--u))] leading-[1.2] font-bold tracking-tight max-md:top-6 max-md:left-6 max-md:text-[13vw]',
+		docked && 'pointer-events-none'
+	]}
 >
 	<span
 		bind:this={first}
-		class="inline-block origin-top-left"
+		class={['inline-block origin-top-left', nameExit]}
 		style:transform={move(offsets?.first, nameMove)}><TypeText text="sebastiano" /></span
 	><br /><span
 		bind:this={last}
-		class="inline-block origin-top-left"
+		class={['inline-block origin-top-left', nameExit]}
 		style:transform={move(offsets?.last, nameMove)}
 		><TypeText text="girotto" delay={11 * 55} /></span
 	>
@@ -288,4 +306,5 @@
 	</div>
 </main>
 
-<Work />
+<Work faded={docked} />
+<Contact bind:docked />

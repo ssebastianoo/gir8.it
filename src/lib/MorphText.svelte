@@ -100,7 +100,7 @@
 						href={run.href}
 						tabindex="-1"
 						class={[
-							'underline decoration-1 underline-offset-[0.2em]',
+							'underline decoration-1 underline-offset-[0.2em] hover:bg-primary hover:text-background hover:no-underline',
 							// can't be clicked before it has fully shown up
 							run.chars.some((i) => !slots[i].visible || slots[i].char !== target[i]) &&
 								'pointer-events-none'

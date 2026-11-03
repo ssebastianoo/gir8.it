@@ -19,6 +19,9 @@
 	const TEXT_FADE = 30;
 	// how softly the room around neighbouring lines melts together, filling inner corners
 	const TEXT_BLEND = 12;
+	// ms it takes the room around text to open up and close again, so the codes never pop in or out
+	const HIDE_MS = 50;
+	const SHOW_MS = 160;
 
 	let canvas: HTMLCanvasElement;
 
@@ -42,11 +45,14 @@
 		// what each byte turns into while it is inside the field, picked when it enters
 		let faces: string[] = [];
 		let inside = new Uint8Array(0);
-		// how much of each byte shows, 0 behind text and 1 away from it
+		// how much of each byte should show, 0 behind text and 1 away from it
+		let cover = new Float32Array(0);
+		// how much of it does, on its way to `cover`
 		let visibility = new Float32Array(0);
 		// sum of exp(-distance / TEXT_BLEND) from each byte to every line of text near it
 		let field = new Float32Array(0);
 		let textDirty = true;
+		let animating = false;
 		let w = 0;
 		let h = 0;
 		let cols = 0; // bytes per row
@@ -106,7 +112,7 @@
 
 		// fades out the bytes near visible text, so the codes flow around it in a rounded, soft shape
 		const coverText = () => {
-			visibility.fill(1);
+			cover.fill(1);
 			if (!bytes.length) return;
 			field.fill(0);
 
@@ -146,15 +152,33 @@
 			// a smooth minimum of the distances, which rounds off the corners where lines meet
 			for (const i of touched) {
 				const dist = -TEXT_BLEND * Math.log(field[i]);
-				visibility[i] = smooth(Math.min(1, Math.max(0, (dist - TEXT_PADDING) / TEXT_FADE)));
+				cover[i] = smooth(Math.min(1, Math.max(0, (dist - TEXT_PADDING) / TEXT_FADE)));
 			}
 		};
 
-		const draw = () => {
+		// no time passing (the wall is not animated, or was just laid out) jumps straight to `cover`
+		const settle = (dt: number) => {
+			if (!dt) {
+				visibility.set(cover);
+				return;
+			}
+			const hide = 1 - Math.exp(-dt / HIDE_MS);
+			const show = 1 - Math.exp(-dt / SHOW_MS);
+			for (let i = 0; i < visibility.length; i++) {
+				const gap = cover[i] - visibility[i];
+				if (!gap) continue;
+				// close enough, or the last bit would never make it and the byte would never be skipped
+				if (Math.abs(gap) < 0.004) visibility[i] = cover[i];
+				else visibility[i] += gap * (gap < 0 ? hide : show);
+			}
+		};
+
+		const draw = (dt = 0) => {
 			if (textDirty) {
 				textDirty = false;
 				coverText();
 			}
+			settle(dt);
 			ctx.clearRect(0, 0, w, h);
 			ctx.fillStyle = color;
 			const radius = BUBBLE_RADIUS * strength;
@@ -215,15 +239,15 @@
 			strength += ((active ? 1 : 0) - strength) * (1 - Math.exp(-dt / 120));
 			if (strength < 0.001) strength = 0;
 
-			// css animations move text around without touching the dom, the endless ones (like the cursor blink) don't
-			if (
-				document
-					.getAnimations()
-					.some((a) => a.playState === 'running' && a.effect?.getTiming().iterations !== Infinity)
-			)
-				textDirty = true;
+			// css animations move text around without touching the dom, the endless ones (like the cursor
+			// blink) don't. one more look once they are over, to see where they have left the text
+			const running = document
+				.getAnimations()
+				.some((a) => a.playState === 'running' && a.effect?.getTiming().iterations !== Infinity);
+			if (running || animating) textDirty = true;
+			animating = running;
 
-			draw();
+			draw(dt);
 			raf = requestAnimationFrame(frame);
 		};
 
@@ -253,6 +277,7 @@
 			bytes = Array.from({ length: cols * rows }, byte);
 			faces = new Array(bytes.length).fill(':3');
 			inside = new Uint8Array(bytes.length);
+			cover = new Float32Array(bytes.length);
 			visibility = new Float32Array(bytes.length);
 			field = new Float32Array(bytes.length);
 			textDirty = true;

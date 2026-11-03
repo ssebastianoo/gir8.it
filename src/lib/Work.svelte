@@ -50,12 +50,26 @@
 		}
 	];
 
+	// the contact section has the screen to itself
+	let { faded = false }: { faded?: boolean } = $props();
+
 	let seen = $state<boolean[]>([]);
+	// has gone away at least once, so it comes back in instead of just sitting there at first
+	let returning = $state(false);
+
+	$effect(() => {
+		if (faded) returning = true;
+	});
 </script>
 
 <!-- the "work" title is the about title, turned into it by the hero's scroll -->
 <section
-	class="relative -mt-[calc(100vh-24*var(--u))] px-[calc(var(--gutter)+8*var(--u))] pb-[calc(20*var(--u))] max-md:-mt-[calc(100vh-12rem)] max-md:px-6 max-md:pb-24"
+	class={[
+		'relative -mt-[calc(100vh-24*var(--u))] px-[calc(var(--gutter)+8*var(--u))] pb-[calc(10*var(--u))] max-md:-mt-[calc(100vh-12rem)] max-md:px-6 max-md:pb-12',
+		faded &&
+			'pointer-events-none animate-crt-off motion-reduce:animate-none motion-reduce:opacity-0',
+		!faded && returning && 'animate-crt-on motion-reduce:animate-none'
+	]}
 >
 	<ol class="relative flex flex-col gap-[calc(9*var(--u))] max-md:gap-14">
 		<!-- the roadmap -->

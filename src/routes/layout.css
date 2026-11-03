@@ -13,6 +13,32 @@
 
 	--animate-alert-in: alert-in 0.7s ease-out both;
 
+	--animate-crt-off: crt-off 0.45s cubic-bezier(0.65, 0, 0.35, 1) both;
+	--animate-crt-on: crt-on 0.45s cubic-bezier(0.65, 0, 0.35, 1) backwards;
+
+	/* closes down to a line and goes out like an old terminal, never strobing */
+	@keyframes crt-off {
+		from {
+			opacity: 1;
+			clip-path: inset(0 0 0 0);
+		}
+		to {
+			opacity: 0;
+			clip-path: inset(50% 0 50% 0);
+		}
+	}
+
+	@keyframes crt-on {
+		from {
+			opacity: 0;
+			clip-path: inset(50% 0 50% 0);
+		}
+		to {
+			opacity: 1;
+			clip-path: inset(0 0 0 0);
+		}
+	}
+
 	@keyframes blink {
 		50% {
 			opacity: 0;
